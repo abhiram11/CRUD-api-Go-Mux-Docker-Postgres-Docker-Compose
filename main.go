@@ -72,7 +72,7 @@ func jsonContentTypeMiddleware ( next http.Handler) http.Handler {
 			log.Fatal(err)
 		}
 
-		json.NewEncoder(w).Encode(users)
+		json.NewEncoder(w).Encode(users) // encode() consists the return value
 	}
  }
 
@@ -87,7 +87,7 @@ func jsonContentTypeMiddleware ( next http.Handler) http.Handler {
 			log.Fatal("handle error gracefully")
 		}
 
-		json.NewEncoder(w).Encode(users)
+		json.NewEncoder(w).Encode(users) // encode() consists the return value
 
 	} 
  }
@@ -97,13 +97,73 @@ func jsonContentTypeMiddleware ( next http.Handler) http.Handler {
 		var u User
 		json.NewDecoder(r.Body).Decode(&u) // does this mean the request body data is also type checked for USER?
 
-		err := db.QueryRow("INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id", u.Name, u.Email)
+		err := db.QueryRow("INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id", u.Name, u.Email) // db.QueryRow!
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		json.NewEncoder(w).Encode(u)
+		json.NewEncoder(w).Encode(u) // encode() consists the return value
 
 	}
  }
+
+ func updateUser (db *sql) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var u User
+		json.NewDecoder(r.Body).Decode(&u)
+
+		vars := mux.Vars(r)
+		id  := vars["id"]
+
+		// we should add test cases for specific parameter being changed.. not whole
+		_, err := db.Exec("UPDATE users SET name = $1, email = $2 WHERE id = $3", u.Name, u.Email, u.id) // db.EXEC and NOT db.Query!!
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		json.NewEncoder(w).Encode(u)
+	}
+ }
+
+ func deleteUser(db *sql) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id   := vars["id"]
+
+		_, err := db.Exec("DELETE FROM users WHERE id = $1", id)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		json.NewEncoder(w).Encode("User deleted")
+	}
+ }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
