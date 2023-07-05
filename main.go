@@ -75,3 +75,35 @@ func jsonContentTypeMiddleware ( next http.Handler) http.Handler {
 		json.NewEncoder(w).Encode(users)
 	}
  }
+
+ func getUser (db *sql) http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request) { // 17:07 video what !
+		vars:= mux.Vars(r)
+		id := vars["id"]
+
+		var u User
+		res, err := db.Query("SELECT * FROM users where id = $1", id).Scan(&u.ID, &u.Name, &u.Email)
+		if err != nil{
+			log.Fatal("handle error gracefully")
+		}
+
+		json.NewEncoder(w).Encode(users)
+
+	} 
+ }
+
+ func createUser (db *sql) httpHandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request) {
+		var u User
+		json.NewDecoder(r.Body).Decode(&u) // does this mean the request body data is also type checked for USER?
+
+		err := db.QueryRow("INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id", u.Name, u.Email)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		json.NewEncoder(w).Encode(u)
+
+	}
+ }
