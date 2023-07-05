@@ -42,10 +42,36 @@ func main() {
 }
 
 func jsonContentTypeMiddleware ( next http.Handler) http.Handler {
-	return  http.HandlerFunc( func(w http.ResponseWriter, r *http.Request){
+	return http.HandlerFunc( func(w http.ResponseWriter, r *http.Request){
 		w.Header().Set("Content-Type", "application/json")
 		next.ServeHTTP(w, r)
 	}
 }
 
-// defining functions/ controllers as fdefined in router.handleFuync
+// defining functions/ controllers as defined in router.handleFunc
+ func getUsers(db *sql.db) http.HandlerFunc {
+	return func(w, http.ResponseWriter, r *http.Request) {
+		rows, err := db.Query("SELECT * FROM users")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close() //atleast no error is confirmed then only defer the database close function (?)
+
+		users := []User{}
+		for rows.Next() {
+			var u User
+			if err := rows.Scan(&u.ID, &u.Name, &u.Email); err != nil {
+				log.Fatal(err)
+			}
+
+			users = append(users, u)
+
+		}
+
+		if err := rows.Err(); err != nil {
+			log.Fatal(err)
+		}
+
+		json.NewEncoder(w).Encode(users)
+	}
+ }
