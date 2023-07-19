@@ -5,3 +5,5 @@ Initial steps to install modules:
 1. go mod init api
 2. go get github.com/gorilla/mux
 3. go get github.com/lib/pq
+
+.... Might discontinue this learning repo since gorilla mux is now read-only project !
